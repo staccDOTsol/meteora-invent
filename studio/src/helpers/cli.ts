@@ -17,7 +17,46 @@ import fs from 'fs';
 import * as readline from 'readline';
 import path from 'path';
 
+/**
+ * Check for early-exit flags (--help, --version) BEFORE any config loading or
+ * network calls.  This prevents confusing "Non-base58 character" errors when
+ * users just want to see the help text.
+ */
+export function checkEarlyExitFlags(): void {
+  const rawArgs = process.argv.slice(2);
+
+  if (rawArgs.includes('--version') || rawArgs.includes('-v')) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const pkg = require('../../package.json') as { version?: string; name?: string };
+      console.log(`${pkg.name ?? 'meteora-studio'} v${pkg.version ?? 'unknown'}`);
+    } catch {
+      console.log('meteora-studio (version unknown)');
+    }
+    process.exit(0);
+  }
+
+  // --help is handled per-command via displayHelp(), but if it appears with NO
+  // other meaningful arguments we print a generic usage hint and exit early so
+  // the user doesn't hit config errors.
+  if (rawArgs.includes('--help') || rawArgs.includes('-h')) {
+    // Individual commands will re-check `args.help` and print their own help.
+    // We only exit here when help is the ONLY meaningful argument.
+    const nonHelpArgs = rawArgs.filter((a) => a !== '--help' && a !== '-h');
+    if (nonHelpArgs.length === 0) {
+      console.log('\nMeteora Studio - Token launch and liquidity management toolkit\n');
+      console.log('Usage:  pnpm studio <command> [options]\n');
+      console.log('Run any command with --help to see its specific options.');
+      console.log('Example: pnpm dbc-create-config --help\n');
+      process.exit(0);
+    }
+  }
+}
+
 export function parseCliArguments(): CliArguments {
+  // Check early-exit flags BEFORE any config loading
+  checkEarlyExitFlags();
+
   const { values } = parseArgs({
     args: process.argv,
     options: {
