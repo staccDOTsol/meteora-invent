@@ -14,7 +14,7 @@ import { PublicKey } from '@solana/web3.js';
 const PLACEHOLDER_PATTERNS = [
   /^YOUR_/i,
   /^PLACEHOLDER/i,
-  /^XXX/i,
+  /^XXX$/i,
   /^TOKEN_NAME$/i,
   /^TOKEN_SYMBOL$/i,
   /^TOKEN_DESCRIPTION$/i,

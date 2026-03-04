@@ -18,9 +18,15 @@ import * as readline from 'readline';
 import path from 'path';
 
 /**
- * Check for early-exit flags (--help, --version) BEFORE any config loading or
+ * Check for early-exit flags (--version) BEFORE any config loading or
  * network calls.  This prevents confusing "Non-base58 character" errors when
- * users just want to see the help text.
+ * users just want to see the version.
+ *
+ * Note: --help is intentionally NOT handled here. Each command script
+ * receives its own argv (e.g. `pnpm dbc-create-config --help` gives
+ * rawArgs = ['--help'] with no command prefix), so a global --help exit
+ * would always fire before command-specific displayHelp() can run.
+ * Individual commands handle --help via their own `if (args.help)` checks.
  */
 export function checkEarlyExitFlags(): void {
   const rawArgs = process.argv.slice(2);
@@ -34,22 +40,6 @@ export function checkEarlyExitFlags(): void {
       console.log('meteora-studio (version unknown)');
     }
     process.exit(0);
-  }
-
-  // --help is handled per-command via displayHelp(), but if it appears with NO
-  // other meaningful arguments we print a generic usage hint and exit early so
-  // the user doesn't hit config errors.
-  if (rawArgs.includes('--help') || rawArgs.includes('-h')) {
-    // Individual commands will re-check `args.help` and print their own help.
-    // We only exit here when help is the ONLY meaningful argument.
-    const nonHelpArgs = rawArgs.filter((a) => a !== '--help' && a !== '-h');
-    if (nonHelpArgs.length === 0) {
-      console.log('\nMeteora Studio - Token launch and liquidity management toolkit\n');
-      console.log('Usage:  pnpm studio <command> [options]\n');
-      console.log('Run any command with --help to see its specific options.');
-      console.log('Example: pnpm dbc-create-config --help\n');
-      process.exit(0);
-    }
   }
 }
 
