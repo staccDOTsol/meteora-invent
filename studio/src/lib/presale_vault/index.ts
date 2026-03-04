@@ -6,7 +6,7 @@ import BN from 'bn.js';
 import Decimal from 'decimal.js';
 import { runSimulateTransaction } from '../../helpers/transaction';
 import { getRounding } from '../../helpers/utils';
-import { validatePresaleConfigFields, validateBaseConfig } from '../../helpers/config-validation';
+import { validatePresaleConfigFields } from '../../helpers/config-validation';
 
 export async function createFcfsPresaleVault(
   connection: Connection,

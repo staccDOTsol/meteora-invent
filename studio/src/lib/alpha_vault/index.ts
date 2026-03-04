@@ -42,7 +42,7 @@ import {
 } from '../../helpers';
 import { getAlphaVaultWhitelistMode, getClusterFromProgramId } from './utils';
 import { uploadProof } from './merkle_tree/metadata';
-import { validateAlphaVaultConfigFields, validateBaseConfig } from '../../helpers/config-validation';
+import { validateAlphaVaultConfigFields } from '../../helpers/config-validation';
 
 export async function createFcfsAlphaVault(
   connection: Connection,
