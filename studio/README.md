@@ -93,14 +93,14 @@ Before running any action, verify each item:
 
 > ⚠️ **These are for devnet testing only.** Do NOT use on mainnet.
 
-When testing on devnet, you need valid Solana addresses for placeholder fields.
-You can use any valid devnet wallet you control, or these well-known addresses:
+When testing on devnet, you need valid Solana addresses for placeholder fields. You can use any
+valid devnet wallet you control, or these well-known addresses:
 
-| Field | Purpose | Sample Devnet Address |
-|-------|---------|----------------------|
-| `feeClaimer` | Receives partner trading fees | Use your own devnet wallet |
+| Field              | Purpose                                 | Sample Devnet Address      |
+| ------------------ | --------------------------------------- | -------------------------- |
+| `feeClaimer`       | Receives partner trading fees           | Use your own devnet wallet |
 | `leftoverReceiver` | Receives leftover tokens post-migration | Use your own devnet wallet |
-| `creator` | Pool creator identity | Use your own devnet wallet |
+| `creator`          | Pool creator identity                   | Use your own devnet wallet |
 
 **Quick way to get a test address:**
 
@@ -113,6 +113,7 @@ solana address --keypair /tmp/test-wallet.json
 Use the printed address in your config fields.
 
 **Well-known safe addresses (devnet):**
+
 - Solana System Program: `11111111111111111111111111111111`
 - SOL (Wrapped): `So11111111111111111111111111111111111111112`
 - USDC (devnet): `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`
@@ -131,6 +132,7 @@ un-replaced placeholder like `YOUR_FEE_CLAIMER_ADDRESS`.
 3. Replace each with a valid 32-byte base58 Solana address
 
 Fields that commonly need updating in `dbc_config.jsonc`:
+
 - `dbcConfig.feeClaimer` — replace `YOUR_FEE_CLAIMER_ADDRESS`
 - `dbcConfig.leftoverReceiver` — replace `YOUR_LEFTOVER_RECEIVER_ADDRESS`
 - `dbcPool.creator` — replace `YOUR_CREATOR_ADDRESS`
@@ -150,8 +152,8 @@ Fields that commonly need updating in `dbc_config.jsonc`:
 
 ### Dry-Run Mode
 
-All config files default to `"dryRun": true` — transactions are simulated, not sent on-chain.
-This is intentional for safety. When your simulation passes, set `"dryRun": false` to go live.
+All config files default to `"dryRun": true` — transactions are simulated, not sent on-chain. This
+is intentional for safety. When your simulation passes, set `"dryRun": false` to go live.
 
 ## 📋 Available Actions
 

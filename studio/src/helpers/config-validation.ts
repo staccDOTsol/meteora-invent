@@ -221,11 +221,7 @@ export function validateDlmmConfigFields(config: {
   if (config.lfgSeedLiquidity) {
     const liq = config.lfgSeedLiquidity;
     if (liq.positionOwner !== undefined) {
-      const err = validateAddress(
-        'lfgSeedLiquidity.positionOwner',
-        liq.positionOwner,
-        CONFIG_FILE
-      );
+      const err = validateAddress('lfgSeedLiquidity.positionOwner', liq.positionOwner, CONFIG_FILE);
       if (err) errors.push(err);
     }
     if (liq.feeOwner !== undefined) {
@@ -245,11 +241,7 @@ export function validateDlmmConfigFields(config: {
       if (err) errors.push(err);
     }
     if (liq.feeOwner !== undefined) {
-      const err = validateAddress(
-        'singleBinSeedLiquidity.feeOwner',
-        liq.feeOwner,
-        CONFIG_FILE
-      );
+      const err = validateAddress('singleBinSeedLiquidity.feeOwner', liq.feeOwner, CONFIG_FILE);
       if (err) errors.push(err);
     }
   }
@@ -261,10 +253,12 @@ export function validateDlmmConfigFields(config: {
 // Alpha Vault Config
 // ─────────────────────────────────────────────
 
-export function validateAlphaVaultConfigFields(alphaVault: {
-  whitelistFilepath?: string;
-  merkleProofBaseUrl?: string;
-} | null): void {
+export function validateAlphaVaultConfigFields(
+  alphaVault: {
+    whitelistFilepath?: string;
+    merkleProofBaseUrl?: string;
+  } | null
+): void {
   if (!alphaVault) return;
   // Alpha vault currently has no user-facing address placeholders to validate
   // Future: add validation if/when address fields are added
@@ -282,10 +276,7 @@ export function validatePresaleConfigFields(_config: unknown): void {
 // Generic: validate any MeteoraConfigBase
 // ─────────────────────────────────────────────
 
-export function validateBaseConfig(config: {
-  rpcUrl?: string;
-  keypairFilePath?: string;
-}): void {
+export function validateBaseConfig(config: { rpcUrl?: string; keypairFilePath?: string }): void {
   const errors: ValidationError[] = [];
 
   if (!config.rpcUrl || config.rpcUrl.trim() === '') {
