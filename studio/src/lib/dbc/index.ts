@@ -13,6 +13,7 @@ import {
   modifyComputeUnitPriceIx,
   runSimulateTransaction,
 } from '../../helpers';
+import { validateDbcConfigFields, validateBaseConfig } from '../../helpers/config-validation';
 import { DEFAULT_SEND_TX_MAX_RETRIES, LOCALNET_RPC_URL } from '../../utils/constants';
 import {
   buildCurve,
@@ -48,9 +49,14 @@ export async function createDbcConfig(
   wallet: Wallet,
   quoteMint: PublicKey
 ): Promise<PublicKey> {
+  // Validate config before executing any actions
+  validateBaseConfig(config);
   if (!config.dbcConfig) {
-    throw new Error('Missing dbc configuration');
+    throw new Error(
+      'Missing dbc configuration. Ensure "dbcConfig" is set in config/dbc_config.jsonc.'
+    );
   }
+  validateDbcConfigFields(config.dbcConfig as any);
   console.log('\n> Initializing DBC config...');
 
   let curveConfig: ConfigParameters | null = null;
@@ -155,11 +161,18 @@ export async function createDbcPool(
   baseMint: Keypair,
   dbcConfigKey: PublicKey | null
 ) {
+  // Validate config before executing any actions
+  validateBaseConfig(config);
   if (!config.dbcConfig) {
-    throw new Error('Missing dbc configuration');
+    throw new Error(
+      'Missing dbc configuration. Ensure "dbcConfig" is set in config/dbc_config.jsonc.'
+    );
   }
+  validateDbcConfigFields({ ...(config.dbcConfig as any), dbcPool: config.dbcPool });
   if (!config.dbcPool) {
-    throw new Error('Missing dbc pool configuration');
+    throw new Error(
+      'Missing dbc pool configuration. Ensure "dbcPool" is set in config/dbc_config.jsonc.'
+    );
   }
 
   let configPublicKey: PublicKey;

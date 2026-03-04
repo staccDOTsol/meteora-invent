@@ -42,6 +42,7 @@ import {
 } from '../../helpers';
 import { getAlphaVaultWhitelistMode, getClusterFromProgramId } from './utils';
 import { uploadProof } from './merkle_tree/metadata';
+import { validateAlphaVaultConfigFields, validateBaseConfig } from '../../helpers/config-validation';
 
 export async function createFcfsAlphaVault(
   connection: Connection,
@@ -58,6 +59,8 @@ export async function createFcfsAlphaVault(
     alphaVaultProgramId: PublicKey;
   }
 ): Promise<void> {
+  // Validate alpha vault config fields
+  validateAlphaVaultConfigFields(params);
   const maxDepositingCap = getAmountInLamports(params.maxDepositCap, quoteDecimals);
   const individualDepositingCap = getAmountInLamports(
     params.individualDepositingCap,
