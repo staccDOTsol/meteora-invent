@@ -49,11 +49,11 @@ export async function createDammV1Pool(
   }
 ) {
   // Validate config before executing any actions
-  validateBaseConfig(config);
-  validateDammV1ConfigFields(config);
   if (!config) {
     throw new Error('Missing dynamic amm configuration');
   }
+  validateBaseConfig(config);
+  validateDammV1ConfigFields(config);
   console.log('\n> Initializing Permissionless Dynamic AMM pool...');
 
   if (!config.quoteMint) {

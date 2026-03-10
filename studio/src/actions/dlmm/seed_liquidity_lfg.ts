@@ -1,4 +1,4 @@
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import {
   getAmountInLamports,
   safeParseKeypairFromFile,
@@ -10,6 +10,7 @@ import DLMM, { LBCLMM_PROGRAM_IDS, deriveCustomizablePermissionlessLbPair } from
 import { unpackMint } from '@solana/spl-token';
 import { DEFAULT_COMMITMENT_LEVEL } from '../../utils/constants';
 import { seedLiquidityLfg } from '../../lib/dlmm';
+import { createCheckedConnection } from '../../helpers/connection';
 
 async function main() {
   const config = await getDlmmConfig();
@@ -22,7 +23,7 @@ async function main() {
   console.log(`- Dry run = ${config.dryRun}`);
   console.log(`- Using payer ${keypair.publicKey} to execute commands`);
 
-  const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
+  const connection = await createCheckedConnection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
 
   const { baseMint } = parseCliArguments();
   if (!baseMint) {

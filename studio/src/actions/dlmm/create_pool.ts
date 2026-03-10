@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import {
   safeParseKeypairFromFile,
   createTokenMint,
@@ -11,6 +11,7 @@ import { AlphaVaultConfig } from '../../utils/types';
 import { DEFAULT_COMMITMENT_LEVEL, DLMM_PROGRAM_IDS } from '../../utils/constants';
 import { deriveCustomizablePermissionlessLbPair } from '@meteora-ag/dlmm';
 import { createAlphaVault } from '../../lib/alpha_vault';
+import { createCheckedConnection } from '../../helpers/connection';
 
 async function main() {
   const config = await getDlmmConfig();
@@ -23,7 +24,7 @@ async function main() {
   console.log(`- Dry run = ${config.dryRun}`);
   console.log(`- Using payer ${keypair.publicKey} to execute commands`);
 
-  const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
+  const connection = await createCheckedConnection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
   const wallet = new Wallet(keypair);
 
   let baseMint: PublicKey;

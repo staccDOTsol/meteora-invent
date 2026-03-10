@@ -1,4 +1,4 @@
-import { Keypair, Connection } from '@solana/web3.js';
+import { Keypair } from '@solana/web3.js';
 import bs58 from 'bs58';
 import { config } from 'dotenv';
 import fs from 'fs';
@@ -6,6 +6,7 @@ import path from 'path';
 import { parseCliArguments, getNetworkConfig, displayHelp } from '../../helpers/cli';
 import { airdropSol } from '../../helpers/utils';
 import { GENERATE_KEYPAIR_COMMAND_OPTIONS } from '../../utils/constants';
+import { createCheckedConnection } from '../../helpers/connection';
 
 config();
 
@@ -51,7 +52,7 @@ async function main() {
       console.log(
         `\n>> Attempting to airdrop ${networkConfig.airdropAmount} SOL on ${network.toUpperCase()}...`
       );
-      const connection = new Connection(networkConfig.rpcUrl, 'confirmed');
+      const connection = await createCheckedConnection(networkConfig.rpcUrl, 'confirmed');
 
       try {
         const signature = await airdropSol(connection, keypair, networkConfig.airdropAmount);

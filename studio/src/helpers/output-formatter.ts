@@ -69,9 +69,18 @@ export function formatPoolCreationSuccess(info: PoolInfo): void {
     console.log('  3. Re-run the same command to execute on-chain.');
   } else {
     if (info.txHash) {
-      const explorer = info.network?.toLowerCase().includes('mainnet')
-        ? `https://explorer.solana.com/tx/${info.txHash}`
-        : `https://explorer.solana.com/tx/${info.txHash}?cluster=devnet`;
+      const network = info.network?.toLowerCase() ?? '';
+      let explorer: string;
+      if (network.includes('mainnet')) {
+        explorer = `https://explorer.solana.com/tx/${info.txHash}`;
+      } else if (network.includes('testnet')) {
+        explorer = `https://explorer.solana.com/tx/${info.txHash}?cluster=testnet`;
+      } else if (network.includes('localnet') || network.includes('localhost')) {
+        explorer = `https://explorer.solana.com/tx/${info.txHash}?cluster=custom&customUrl=http%3A%2F%2Flocalhost%3A8899`;
+      } else {
+        // default: devnet
+        explorer = `https://explorer.solana.com/tx/${info.txHash}?cluster=devnet`;
+      }
       console.log(`  1. View transaction: ${explorer}`);
     }
     if (info.poolAddress) {

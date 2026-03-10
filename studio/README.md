@@ -21,7 +21,7 @@ Studio also contains a collection of actions for interacting with other Meteora 
 ### Prerequisites
 
 - Node.js >= 18.0.0
-- pnpm >= 9.0.0
+- pnpm >= 10.0.0
 
 ### Installation
 
@@ -77,7 +77,7 @@ the placeholders with your actual values.
 Before running any action, verify each item:
 
 - [ ] **Node.js ≥ 18** installed (`node --version`)
-- [ ] **pnpm ≥ 9** installed (`pnpm --version`)
+- [ ] **pnpm ≥ 10** installed (`pnpm --version`)
 - [ ] Dependencies installed (`pnpm install` from repo root)
 - [ ] `.env` file created from `.env.example` with your `PRIVATE_KEY`
 - [ ] `keypair.json` generated (`pnpm generate-keypair --network devnet`)
