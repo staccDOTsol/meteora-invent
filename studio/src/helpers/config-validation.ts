@@ -109,20 +109,16 @@ export function validateDbcConfigFields(dbcConfig: {
   const CONFIG_FILE = 'config/dbc_config.jsonc';
   const errors: ValidationError[] = [];
 
-  // Validate top-level dbcConfig fields
-  if ('feeClaimer' in dbcConfig && dbcConfig.feeClaimer !== undefined) {
-    const err = validateAddress('dbcConfig.feeClaimer', dbcConfig.feeClaimer, CONFIG_FILE);
-    if (err) errors.push(err);
-  }
+  // Validate top-level dbcConfig fields (called unconditionally so absent required fields are caught)
+  const feeClaimerErr = validateAddress('dbcConfig.feeClaimer', dbcConfig.feeClaimer, CONFIG_FILE);
+  if (feeClaimerErr) errors.push(feeClaimerErr);
 
-  if ('leftoverReceiver' in dbcConfig && dbcConfig.leftoverReceiver !== undefined) {
-    const err = validateAddress(
-      'dbcConfig.leftoverReceiver',
-      dbcConfig.leftoverReceiver,
-      CONFIG_FILE
-    );
-    if (err) errors.push(err);
-  }
+  const leftoverReceiverErr = validateAddress(
+    'dbcConfig.leftoverReceiver',
+    dbcConfig.leftoverReceiver,
+    CONFIG_FILE
+  );
+  if (leftoverReceiverErr) errors.push(leftoverReceiverErr);
 
   // Validate dbcPool.creator
   if (dbcConfig.dbcPool?.creator !== undefined) {

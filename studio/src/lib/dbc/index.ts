@@ -992,6 +992,9 @@ export async function transferDbcPoolCreator(
     throw new Error('Missing dbc transfer pool creator parameters');
   }
 
+  validateBaseConfig(config);
+  validateDbcConfigFields({ dbcTransferPoolCreator: config.dbcTransferPoolCreator });
+
   console.log('\n> Initializing DBC pool creator transfer...');
 
   const dbcInstance = new DynamicBondingCurveClient(connection, 'confirmed');
