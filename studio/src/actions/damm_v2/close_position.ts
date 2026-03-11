@@ -1,8 +1,9 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { Wallet } from '@coral-xyz/anchor';
 import { DEFAULT_COMMITMENT_LEVEL } from '../../utils/constants';
 import { getDammV2Config, parseCliArguments, safeParseKeypairFromFile } from '../../helpers';
 import { closePosition } from '../../lib/damm_v2';
+import { createCheckedConnection } from '../../helpers/connection';
 
 async function main() {
   const config = await getDammV2Config();
@@ -15,7 +16,7 @@ async function main() {
   console.log(`- Dry run = ${config.dryRun}`);
   console.log(`- Using payer ${keypair.publicKey} to execute commands`);
 
-  const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
+  const connection = await createCheckedConnection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
   const wallet = new Wallet(keypair);
 
   const { poolAddress: poolKey } = parseCliArguments();

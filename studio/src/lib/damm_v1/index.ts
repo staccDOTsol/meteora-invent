@@ -25,6 +25,7 @@ import {
 } from '@meteora-ag/dynamic-amm-sdk/dist/cjs/src/amm/utils';
 import { SEEDS } from '@meteora-ag/dynamic-amm-sdk/dist/cjs/src/amm/constants';
 import { DEFAULT_SEND_TX_MAX_RETRIES } from '../../utils/constants';
+import { validateDammV1ConfigFields, validateBaseConfig } from '../../helpers/config-validation';
 
 /**
  * Create a DammV1 pool permissionlessly
@@ -47,9 +48,12 @@ export async function createDammV1Pool(
     programId?: PublicKey;
   }
 ) {
+  // Validate config before executing any actions
   if (!config) {
     throw new Error('Missing dynamic amm configuration');
   }
+  validateBaseConfig(config);
+  validateDammV1ConfigFields(config);
   console.log('\n> Initializing Permissionless Dynamic AMM pool...');
 
   if (!config.quoteMint) {

@@ -6,6 +6,7 @@ import BN from 'bn.js';
 import Decimal from 'decimal.js';
 import { runSimulateTransaction } from '../../helpers/transaction';
 import { getRounding } from '../../helpers/utils';
+import { validatePresaleConfigFields } from '../../helpers/config-validation';
 
 export async function createFcfsPresaleVault(
   connection: Connection,
@@ -15,6 +16,8 @@ export async function createFcfsPresaleVault(
   params: PresaleVaultConfig,
   dryRun: boolean
 ) {
+  // Validate config before executing any actions
+  validatePresaleConfigFields(params);
   console.log(`\n> Initializing FCFS Presale...`);
   console.log(`- Using baseMint: ${baseMint.toBase58()}`);
   console.log(`- Using quoteMint: ${quoteMint.toBase58()}`);

@@ -21,7 +21,7 @@ Studio also contains a collection of actions for interacting with other Meteora 
 ### Prerequisites
 
 - Node.js >= 18.0.0
-- pnpm >= 9.0.0
+- pnpm >= 10.0.0
 
 ### Installation
 
@@ -71,6 +71,89 @@ pnpm generate-keypair --network localnet
 
 **Note:** You can use the provided example configurations as a starting point. Make sure to replace
 the placeholders with your actual values.
+
+## ✅ Setup Checklist
+
+Before running any action, verify each item:
+
+- [ ] **Node.js ≥ 18** installed (`node --version`)
+- [ ] **pnpm ≥ 10** installed (`pnpm --version`)
+- [ ] Dependencies installed (`pnpm install` from repo root)
+- [ ] `.env` file created from `.env.example` with your `PRIVATE_KEY`
+- [ ] `keypair.json` generated (`pnpm generate-keypair --network devnet`)
+- [ ] Config file updated — replaced ALL placeholder values:
+  - `YOUR_FEE_CLAIMER_ADDRESS` → valid Solana address
+  - `YOUR_LEFTOVER_RECEIVER_ADDRESS` → valid Solana address
+  - `YOUR_CREATOR_ADDRESS` → valid Solana address
+  - `TOKEN_NAME`, `TOKEN_SYMBOL`, `TOKEN_DESCRIPTION` → your token info
+- [ ] `"dryRun": true` in config (default) — change to `false` only when ready to go live
+- [ ] Sufficient SOL balance for fees (`solana balance --url devnet`)
+
+## 🧪 Sample Devnet Addresses for Testing
+
+> ⚠️ **These are for devnet testing only.** Do NOT use on mainnet.
+
+When testing on devnet, you need valid Solana addresses for placeholder fields. You can use any
+valid devnet wallet you control, or these well-known addresses:
+
+| Field              | Purpose                                 | Sample Devnet Address      |
+| ------------------ | --------------------------------------- | -------------------------- |
+| `feeClaimer`       | Receives partner trading fees           | Use your own devnet wallet |
+| `leftoverReceiver` | Receives leftover tokens post-migration | Use your own devnet wallet |
+| `creator`          | Pool creator identity                   | Use your own devnet wallet |
+
+**Quick way to get a test address:**
+
+```bash
+# Generate a new keypair for testing
+solana-keygen new --no-bip39-passphrase --outfile /tmp/test-wallet.json
+solana address --keypair /tmp/test-wallet.json
+```
+
+Use the printed address in your config fields.
+
+**Well-known safe addresses (devnet):**
+
+- Solana System Program: `11111111111111111111111111111111`
+- SOL (Wrapped): `So11111111111111111111111111111111111111112`
+- USDC (devnet): `4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU`
+
+## 🔧 Troubleshooting
+
+### "Non-base58 character" Error
+
+This error means one of your config fields contains an invalid Solana address — usually an
+un-replaced placeholder like `YOUR_FEE_CLAIMER_ADDRESS`.
+
+**How to fix:**
+
+1. Open the relevant config file (e.g. `config/dbc_config.jsonc`)
+2. Search for values starting with `YOUR_`, `TOKEN_`, or `PLACEHOLDER`
+3. Replace each with a valid 32-byte base58 Solana address
+
+Fields that commonly need updating in `dbc_config.jsonc`:
+
+- `dbcConfig.feeClaimer` — replace `YOUR_FEE_CLAIMER_ADDRESS`
+- `dbcConfig.leftoverReceiver` — replace `YOUR_LEFTOVER_RECEIVER_ADDRESS`
+- `dbcPool.creator` — replace `YOUR_CREATOR_ADDRESS`
+
+### "Failed to connect to RPC endpoint" Error
+
+1. Check your `rpcUrl` in the config file is correct
+2. For localnet: start the validator first with `pnpm studio start-test-validator`
+3. For devnet/mainnet: verify you have internet connectivity
+4. Consider using a dedicated RPC provider instead of the public endpoint (rate limiting)
+
+### Wallet / Keypair Issues
+
+- If `keypair.json` is missing: run `pnpm generate-keypair --network devnet`
+- If your wallet has no SOL: run `pnpm studio airdrop-sol --network devnet`
+- For localnet: `pnpm studio airdrop-sol --network localnet`
+
+### Dry-Run Mode
+
+All config files default to `"dryRun": true` — transactions are simulated, not sent on-chain. This
+is intentional for safety. When your simulation passes, set `"dryRun": false` to go live.
 
 ## 📋 Available Actions
 

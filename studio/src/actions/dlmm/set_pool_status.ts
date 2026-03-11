@@ -1,4 +1,4 @@
-import { Connection, PublicKey, sendAndConfirmTransaction } from '@solana/web3.js';
+import { PublicKey, sendAndConfirmTransaction } from '@solana/web3.js';
 import {
   safeParseKeypairFromFile,
   modifyComputeUnitPriceIx,
@@ -9,6 +9,7 @@ import {
 import { Wallet } from '@coral-xyz/anchor';
 import DLMM from '@meteora-ag/dlmm';
 import { DEFAULT_COMMITMENT_LEVEL, DEFAULT_SEND_TX_MAX_RETRIES } from '../../utils/constants';
+import { createCheckedConnection } from '../../helpers/connection';
 
 async function main() {
   const config = await getDlmmConfig();
@@ -21,7 +22,7 @@ async function main() {
   console.log(`- Dry run = ${config.dryRun}`);
   console.log(`- Using payer ${keypair.publicKey} to execute commands`);
 
-  const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
+  const connection = await createCheckedConnection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
   const wallet = new Wallet(keypair);
 
   if (!config.setDlmmPoolStatus) {

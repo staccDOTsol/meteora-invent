@@ -1,8 +1,9 @@
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Keypair, PublicKey } from '@solana/web3.js';
 import { safeParseKeypairFromFile, getDbcConfig, parseCliArguments } from '../../helpers';
 import { Wallet } from '@coral-xyz/anchor';
 import { DEFAULT_COMMITMENT_LEVEL } from '../../utils/constants';
 import { createDbcPool } from '../../lib/dbc';
+import { createCheckedConnection } from '../../helpers/connection';
 
 async function main() {
   const config = await getDbcConfig();
@@ -15,7 +16,7 @@ async function main() {
   console.log(`- Dry run = ${config.dryRun}`);
   console.log(`- Using wallet ${keypair.publicKey} to deploy pool`);
 
-  const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
+  const connection = await createCheckedConnection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
   const wallet = new Wallet(keypair);
 
   let dbcConfigKey: PublicKey | null = null;

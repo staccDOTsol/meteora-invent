@@ -1,4 +1,4 @@
-import { Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import {
   safeParseKeypairFromFile,
   createTokenMint,
@@ -10,6 +10,7 @@ import { createDammV1Pool } from '../../lib/damm_v1';
 import { AlphaVaultConfig } from '../../utils/types';
 import { DEFAULT_COMMITMENT_LEVEL } from '../../utils/constants';
 import { createAlphaVault } from '../../lib/alpha_vault';
+import { createCheckedConnection } from '../../helpers/connection';
 import {
   createProgram,
   deriveCustomizablePermissionlessConstantProductPoolAddress,
@@ -26,7 +27,7 @@ async function main() {
   console.log(`- Dry run = ${config.dryRun}`);
   console.log(`- Using payer ${keypair.publicKey} to execute commands`);
 
-  const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
+  const connection = await createCheckedConnection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
   const wallet = new Wallet(keypair);
 
   let baseMint: PublicKey;

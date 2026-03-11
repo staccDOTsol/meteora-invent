@@ -17,7 +17,36 @@ import fs from 'fs';
 import * as readline from 'readline';
 import path from 'path';
 
+/**
+ * Check for early-exit flags (--version) BEFORE any config loading or
+ * network calls.  This prevents confusing "Non-base58 character" errors when
+ * users just want to see the version.
+ *
+ * Note: --help is intentionally NOT handled here. Each command script
+ * receives its own argv (e.g. `pnpm dbc-create-config --help` gives
+ * rawArgs = ['--help'] with no command prefix), so a global --help exit
+ * would always fire before command-specific displayHelp() can run.
+ * Individual commands handle --help via their own `if (args.help)` checks.
+ */
+export function checkEarlyExitFlags(): void {
+  const rawArgs = process.argv.slice(2);
+
+  if (rawArgs.includes('--version') || rawArgs.includes('-v')) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const pkg = require('../../package.json') as { version?: string; name?: string };
+      console.log(`${pkg.name ?? 'meteora-studio'} v${pkg.version ?? 'unknown'}`);
+    } catch {
+      console.log('meteora-studio (version unknown)');
+    }
+    process.exit(0);
+  }
+}
+
 export function parseCliArguments(): CliArguments {
+  // Check early-exit flags BEFORE any config loading
+  checkEarlyExitFlags();
+
   const { values } = parseArgs({
     args: process.argv,
     options: {

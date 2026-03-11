@@ -1,5 +1,5 @@
 import { Wallet } from '@coral-xyz/anchor';
-import { Connection, PublicKey } from '@solana/web3.js';
+import { PublicKey } from '@solana/web3.js';
 import { DEFAULT_COMMITMENT_LEVEL } from '../../utils/constants';
 import { safeParseKeypairFromFile, getDammV1Config, parseCliArguments } from '../../helpers';
 import {
@@ -7,6 +7,7 @@ import {
   deriveCustomizablePermissionlessConstantProductPoolAddress,
 } from '@meteora-ag/dynamic-amm-sdk/dist/cjs/src/amm/utils';
 import { createDammV1Stake2EarnPool } from '../../lib/damm_v1/stake2earn';
+import { createCheckedConnection } from '../../helpers/connection';
 
 async function main() {
   const config = await getDammV1Config();
@@ -19,7 +20,7 @@ async function main() {
   console.log(`- Dry run = ${config.dryRun}`);
   console.log(`- Using payer ${keypair.publicKey} to execute commands`);
 
-  const connection = new Connection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
+  const connection = await createCheckedConnection(config.rpcUrl, DEFAULT_COMMITMENT_LEVEL);
   const wallet = new Wallet(keypair);
 
   const { baseMint } = parseCliArguments();

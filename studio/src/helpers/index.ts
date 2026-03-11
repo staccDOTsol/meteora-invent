@@ -6,3 +6,5 @@ export * from './utils';
 export * from './validation';
 export * from './transaction';
 export * from './accounts';
+export * from './connection';
+export * from './output-formatter';

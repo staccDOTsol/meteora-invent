@@ -30,6 +30,7 @@ import {
 } from '../../helpers';
 import { promptForSelection } from '../../helpers/cli';
 import { DEFAULT_SEND_TX_MAX_RETRIES } from '../../utils/constants';
+import { validateDammV2ConfigFields, validateBaseConfig } from '../../helpers/config-validation';
 
 /**
  * Create a one-sided DAMM V2 pool
@@ -46,8 +47,13 @@ export async function createDammV2OneSidedPool(
   baseTokenMint: PublicKey,
   quoteTokenMint: PublicKey
 ) {
+  // Validate config before executing any actions
+  validateBaseConfig(config);
+  validateDammV2ConfigFields(config);
   if (!config.dammV2Config) {
-    throw new Error('Missing DAMM V2 configuration');
+    throw new Error(
+      'Missing DAMM V2 configuration. Ensure "dammV2Config" is set in config/damm_v2_config.jsonc.'
+    );
   }
   console.log('\n> Initializing one-sided DAMM V2 pool...');
 
@@ -242,8 +248,13 @@ export async function createDammV2BalancedPool(
   baseTokenMint: PublicKey,
   quoteTokenMint: PublicKey
 ) {
+  // Validate config before executing any actions
+  validateBaseConfig(config);
+  validateDammV2ConfigFields(config);
   if (!config.dammV2Config) {
-    throw new Error('Missing DAMM V2 configuration');
+    throw new Error(
+      'Missing DAMM V2 configuration. Ensure "dammV2Config" is set in config/damm_v2_config.jsonc.'
+    );
   }
   console.log('\n> Initializing balanced DAMM V2 pool...');
 

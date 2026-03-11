@@ -19,6 +19,7 @@ import {
 } from '../../helpers';
 import { getMint } from '@solana/spl-token';
 import { DEFAULT_SEND_TX_MAX_RETRIES, DLMM_PROGRAM_IDS } from '../../utils/constants';
+import { validateDlmmConfigFields, validateBaseConfig } from '../../helpers/config-validation';
 
 export async function createPermissionlessDlmmPool(
   config: DlmmConfig,
@@ -31,8 +32,13 @@ export async function createPermissionlessDlmmPool(
     programId?: PublicKey;
   }
 ) {
+  // Validate config before executing any actions
+  validateBaseConfig(config);
+  validateDlmmConfigFields(config);
   if (!config.dlmmConfig) {
-    throw new Error('Missing DLMM configuration');
+    throw new Error(
+      'Missing DLMM configuration. Ensure "dlmmConfig" is set in config/dlmm_config.jsonc.'
+    );
   }
   console.log('\n> Initializing Permissionless DLMM pool...');
 
