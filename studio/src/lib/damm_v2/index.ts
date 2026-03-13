@@ -55,6 +55,13 @@ export async function createDammV2OneSidedPool(
       'Missing DAMM V2 configuration. Ensure "dammV2Config" is set in config/damm_v2_config.jsonc.'
     );
   }
+  if (config.dammV2Config.collectFeeMode === 2) {
+    throw new Error(
+      'Compounding fee mode (collectFeeMode: 2) does not support single-sided pools. ' +
+        'Use damm-v2-create-balanced-pool instead.'
+    );
+  }
+
   console.log('\n> Initializing one-sided DAMM V2 pool...');
 
   if (!config.quoteMint) {
@@ -125,7 +132,12 @@ export async function createDammV2OneSidedPool(
   const initSqrtPrice = getSqrtPriceFromPrice(initPrice.toString(), baseDecimals, quoteDecimals);
   let minSqrtPrice = initSqrtPrice;
 
-  const liquidityDelta = getLiquidityDeltaFromAmountA(tokenAAmount, initSqrtPrice, maxSqrtPrice);
+  const liquidityDelta = getLiquidityDeltaFromAmountA(
+    tokenAAmount,
+    initSqrtPrice,
+    maxSqrtPrice,
+    collectFeeMode
+  );
 
   if (quoteAmount) {
     tokenBAmount = getAmountInLamports(quoteAmount, quoteDecimals);
@@ -175,7 +187,8 @@ export async function createDammV2OneSidedPool(
 
   const poolFeesParams: PoolFeesParams = {
     baseFee: baseFeeParams,
-    padding: [],
+    compoundingFeeBps: 0,
+    padding: 0,
     dynamicFee,
   };
   const positionNft = Keypair.generate();
@@ -372,6 +385,7 @@ export async function createDammV2BalancedPool(
     sqrtMinPrice: minSqrtPrice,
     sqrtMaxPrice: maxSqrtPrice,
     tokenAInfo: baseTokenInfo || undefined,
+    collectFeeMode,
   });
 
   console.log(
@@ -420,9 +434,18 @@ export async function createDammV2BalancedPool(
 
   const baseFeeParams: BaseFee = getBaseFeeParams(baseFee, quoteDecimals, activationType);
 
+  const compoundingFeeBps = collectFeeMode === 2 ? (poolFees.compoundingFeeBps ?? 0) : 0;
+  if (collectFeeMode === 2) {
+    console.log(
+      `- Compounding fee mode: ${compoundingFeeBps} bps of trading fees will be compounded back into pool liquidity`
+    );
+    console.log(`- Compounding pools use full price range (MIN_SQRT_PRICE to MAX_SQRT_PRICE)`);
+  }
+
   const poolFeesParams: PoolFeesParams = {
     baseFee: baseFeeParams,
-    padding: [],
+    compoundingFeeBps,
+    padding: 0,
     dynamicFee,
   };
 
@@ -557,6 +580,10 @@ export async function splitPosition(
           sqrtPrice: poolState.sqrtPrice,
           minSqrtPrice: poolState.sqrtMinPrice,
           maxSqrtPrice: poolState.sqrtMaxPrice,
+          collectFeeMode: poolState.collectFeeMode,
+          tokenAAmount: poolState.tokenAAmount,
+          tokenBAmount: poolState.tokenBAmount,
+          liquidity: poolState.liquidity,
         });
 
         return [
@@ -1086,6 +1113,10 @@ export async function addLiquidity(
     minSqrtPrice: poolState.sqrtMinPrice,
     maxSqrtPrice: poolState.sqrtMaxPrice,
     sqrtPrice: poolState.sqrtPrice,
+    collectFeeMode: poolState.collectFeeMode,
+    tokenAAmount: poolState.tokenAAmount,
+    tokenBAmount: poolState.tokenBAmount,
+    liquidity: poolState.liquidity,
   });
 
   console.log(`\n> Deposit quote:`);
@@ -1241,6 +1272,10 @@ export async function removeLiquidity(
           sqrtPrice: poolState.sqrtPrice,
           minSqrtPrice: poolState.sqrtMinPrice,
           maxSqrtPrice: poolState.sqrtMaxPrice,
+          collectFeeMode: poolState.collectFeeMode,
+          tokenAAmount: poolState.tokenAAmount,
+          tokenBAmount: poolState.tokenBAmount,
+          liquidity: poolState.liquidity,
         });
 
         return [
@@ -1325,6 +1360,10 @@ export async function removeLiquidity(
     sqrtPrice: poolState.sqrtPrice,
     minSqrtPrice: poolState.sqrtMinPrice,
     maxSqrtPrice: poolState.sqrtMaxPrice,
+    collectFeeMode: poolState.collectFeeMode,
+    tokenAAmount: poolState.tokenAAmount,
+    tokenBAmount: poolState.tokenBAmount,
+    liquidity: poolState.liquidity,
   });
 
   console.log(`\n> Withdraw quote:`);
