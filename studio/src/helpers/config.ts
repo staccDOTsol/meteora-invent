@@ -274,10 +274,13 @@ export const CONFIG_SCHEMA = {
               },
             },
           },
+          compoundingFeeBps: {
+            type: 'number',
+          },
         },
         collectFeeMode: {
           type: 'number',
-          enum: [0, 1],
+          enum: [0, 1, 2],
         },
         activationType: {
           type: 'number',

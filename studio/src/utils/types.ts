@@ -137,6 +137,7 @@ export interface DynamicAmmV2Config {
     baseFee: DammV2BaseFee;
     dynamicFeeEnabled: boolean;
     dynamicFeeConfig: DynamicFee | null;
+    compoundingFeeBps?: number;
   };
   collectFeeMode: number;
   activationType: number;
