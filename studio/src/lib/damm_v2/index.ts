@@ -132,7 +132,12 @@ export async function createDammV2OneSidedPool(
   const initSqrtPrice = getSqrtPriceFromPrice(initPrice.toString(), baseDecimals, quoteDecimals);
   let minSqrtPrice = initSqrtPrice;
 
-  const liquidityDelta = getLiquidityDeltaFromAmountA(tokenAAmount, initSqrtPrice, maxSqrtPrice, collectFeeMode);
+  const liquidityDelta = getLiquidityDeltaFromAmountA(
+    tokenAAmount,
+    initSqrtPrice,
+    maxSqrtPrice,
+    collectFeeMode
+  );
 
   if (quoteAmount) {
     tokenBAmount = getAmountInLamports(quoteAmount, quoteDecimals);
