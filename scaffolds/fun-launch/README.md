@@ -1,141 +1,59 @@
-# Fun Launch
+# Fun Launch (multi-curve edition)
 
-A platform for launching tokens with customizable price curves.
+A pump-style launchpad where every coin launches on **five bonding curves at
+once**, powered by a fork of `curve-launchpad` with multi-quote support:
+
+| Curve | Quote token | Target market cap |
+| ----- | ----------- | ----------------- |
+| SOL   | wSOL        | 100 SOL           |
+| USDC  | USDC        | 60,000 USDC       |
+| USDT  | USDT        | 60,000 USDT       |
+| 6K4x  | `6K4xdfEk5rvySM496rxm4x8AgC9wVt7N4C7mFFpNAj5f` (Token-2022, transfer fee) | 50 |
+| 73ed  | `73edX6xoGY4v5y2hzuKdrUbJXLntqgmo74au1Ki1pump` | 12,000,000 |
+
+## How a launch works (one wallet approval)
+
+`Create Coin` builds four transactions, signs them all with a single
+`signAllTransactions` prompt, and submits them as a **Jito bundle** (falling
+back to sequential sends through your RPC, e.g. Helius):
+
+1. Create the mint (creator is mint authority), Metaplex metadata, mint
+   5B tokens (1B per curve) to the creator.
+2. Create the SOL + USDC curves (each pulls 1B tokens into curve inventory).
+3. Create the USDT + 6K4 curves.
+4. Create the 73ed curve, then **revoke mint authority**, plus the Jito tip.
+
+Trade fees are 1%, split **50/50 between the coin creator and the platform**,
+paid in the curve's quote token.
+
+## Swap
+
+Every mint gets a minimal swap (on its token page and inline on the home
+page) that routes the input through **Jupiter** into whichever curve gives
+the best rate (or the reverse on sells), and allows **circular routes**
+(coin → quote → coin) across the curves.
 
 ## Setup
 
-1. Clone the repository
-
-```bash
-git clone https://github.com/MeteoraAg/meteora-invent.git
-cd scaffolds/fun-launch
-```
-
-2. Install dependencies
-
 ```bash
 pnpm install
-```
-
-3. Set up environment variables Create a `.env` file in the root directory with the following
-   variables:
-
-```bash
 cp .env.example .env
 ```
 
 ```env
-# Cloudflare R2 Storage
-R2_ACCESS_KEY_ID=your_r2_access_key_id
-R2_SECRET_ACCESS_KEY=your_r2_secret_access_key
-R2_ACCOUNT_ID=your_r2_account_id
-R2_BUCKET=your_r2_bucket_name
-
-# Solana RPC URL
-RPC_URL=your_rpc_url
-
-# Pool Configuration
-POOL_CONFIG_KEY=your_pool_config_key
+BLOB_READ_WRITE_TOKEN=...            # Vercel Blob (images, metadata, coin index)
+RPC_URL=...                          # server-side sends / fallback (e.g. Helius)
+NEXT_PUBLIC_RPC_URL=...              # browser RPC
+NEXT_PUBLIC_CURVE_PROGRAM_ID=...     # deployed curve-launchpad fork
+NEXT_PUBLIC_PLATFORM_FEE_WALLET=...  # platform half of trade fees
+JITO_BLOCK_ENGINE_URL=...            # optional, atomic launch bundles
+NEXT_PUBLIC_JUPITER_API=...          # optional, defaults to lite-api.jup.ag
 ```
 
-### Getting R2 Credentials
-
-1. Go to [Cloudflare Dashboard](https://dash.cloudflare.com)
-2. Navigate to R2
-3. Create a new bucket or select an existing one
-4. Go to "Manage R2 API Tokens"
-5. Create a new API token with the following permissions:
-   - Account R2 Storage: Edit
-   - Bucket: Your bucket name
-6. Copy the Access Key ID and Secret Access Key
-7. Your Account ID can be found in the Cloudflare dashboard URL or in the Account Home page
-
-### Getting RPC URL
-
-1. Get your RPC URL from any of 3rd party providers
-
-### Pool Config Key
-
-The pool config key is used to configure the bonding curve parameters. You'll need to:
-
-1. Deploy your own pool config program
-2. Or use an existing pool config program
-3. Get the public key of the pool config account
-
-4. Run the development server
+Deploy on **Vercel** and attach a **Blob store** (Storage → Blob); Vercel
+injects `BLOB_READ_WRITE_TOKEN` automatically.
 
 ```bash
-pnpm dev
+pnpm dev    # run locally
+pnpm build  # production build
 ```
-
-## Deployment
-
-### Deploying to Vercel
-
-1. Push your code to a GitHub repository
-
-2. Go to [Vercel](https://vercel.com) and sign in with your GitHub account
-
-3. Click "New Project"
-
-4. Import your GitHub repository
-
-5. Configure your project:
-   - Framework Preset: Next.js
-   - Root Directory: ./
-   - Build Command: `pnpm build`
-   - Output Directory: .next
-
-6. Add Environment Variables:
-   - Add all the environment variables from your `.env` file:
-     - `R2_ACCESS_KEY_ID`
-     - `R2_SECRET_ACCESS_KEY`
-     - `R2_ACCOUNT_ID`
-     - `R2_BUCKET`
-     - `RPC_URL`
-     - `POOL_CONFIG_KEY`
-
-7. Click "Deploy"
-
-8. Vercel will automatically deploy your site and provide you with a URL
-
-### Environment Variables in Vercel
-
-You can manage your environment variables in Vercel:
-
-1. Go to your project settings
-2. Click on "Environment Variables"
-3. Add each variable from your `.env` file
-4. You can set different values for Production, Preview, and Development environments
-
-### Custom Domain (Optional)
-
-1. Go to your project settings in Vercel
-2. Click on "Domains"
-3. Add your custom domain
-4. Follow Vercel's instructions to configure your DNS settings
-
-## Features
-
-- Create token pools with customizable price curves
-- Upload token metadata and logos
-- View token statistics and charts
-- Track token transactions
-- Mobile-friendly interface
-
-## Tech Stack
-
-- Next.js
-- TypeScript
-- Tailwind CSS
-- Solana Web3.js
-- Dynamic Bonding Curve SDK
-- Cloudflare R2 for storage
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request

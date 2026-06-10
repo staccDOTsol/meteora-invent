@@ -1,102 +1,101 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import AWS from 'aws-sdk';
-import { Connection, PublicKey } from '@solana/web3.js';
-import { DynamicBondingCurveClient } from '@meteora-ag/dynamic-bonding-curve-sdk';
+import { head, put } from '@vercel/blob';
 
-// Environment variables with type assertions
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID as string;
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY as string;
-const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID as string;
-const R2_BUCKET = process.env.R2_BUCKET as string;
-const RPC_URL = process.env.RPC_URL as string;
-const POOL_CONFIG_KEY = process.env.POOL_CONFIG_KEY as string;
+// Uploads the coin image + metadata JSON to Vercel Blob and registers the
+// coin in a simple blob-backed index used by the home page listing.
 
-if (
-  !R2_ACCESS_KEY_ID ||
-  !R2_SECRET_ACCESS_KEY ||
-  !R2_ACCOUNT_ID ||
-  !R2_BUCKET ||
-  !RPC_URL ||
-  !POOL_CONFIG_KEY
-) {
-  throw new Error('Missing required environment variables');
-}
-
-const PRIVATE_R2_URL = `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`;
-const PUBLIC_R2_URL = 'https://pub-85c7f5f0dc104dc784e656b623d999e5.r2.dev';
-
-// Types
 type UploadRequest = {
-  tokenLogo: string;
+  tokenLogo: string; // data URL
   tokenName: string;
   tokenSymbol: string;
+  description?: string;
   mint: string;
   userWallet: string;
 };
 
-type Metadata = {
+export type CoinIndexEntry = {
+  mint: string;
   name: string;
   symbol: string;
   image: string;
+  metadataUri: string;
+  creator: string;
+  createdAt: number;
 };
 
-type MetadataUploadParams = {
-  tokenName: string;
-  tokenSymbol: string;
-  mint: string;
-  image: string;
-};
+const INDEX_PATH = 'coins/index.json';
 
-// R2 client setup
-const r2 = new AWS.S3({
-  endpoint: PRIVATE_R2_URL,
-  accessKeyId: R2_ACCESS_KEY_ID,
-  secretAccessKey: R2_SECRET_ACCESS_KEY,
-  region: 'auto',
-  signatureVersion: 'v4',
-});
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: '8mb',
+    },
+  },
+};
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  try {
-    const { tokenLogo, tokenName, tokenSymbol, mint, userWallet } = req.body as UploadRequest;
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    return res.status(500).json({ error: 'BLOB_READ_WRITE_TOKEN is not configured' });
+  }
 
-    // Validate required fields
+  try {
+    const { tokenLogo, tokenName, tokenSymbol, description, mint, userWallet } =
+      req.body as UploadRequest;
+
     if (!tokenLogo || !tokenName || !tokenSymbol || !mint || !userWallet) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Upload image and metadata
-    const imageUrl = await uploadImage(tokenLogo, mint);
-    if (!imageUrl) {
-      return res.status(400).json({ error: 'Failed to upload image' });
+    const matches = tokenLogo.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) {
+      return res.status(400).json({ error: 'Invalid image data' });
     }
+    const [, contentType, base64Data] = matches;
+    const imageBuffer = Buffer.from(base64Data!, 'base64');
 
-    const metadataUrl = await uploadMetadata({ tokenName, tokenSymbol, mint, image: imageUrl });
-    if (!metadataUrl) {
-      return res.status(400).json({ error: 'Failed to upload metadata' });
-    }
+    const imageBlob = await put(
+      `coins/${mint}.${contentType!.split('/')[1] ?? 'png'}`,
+      imageBuffer,
+      {
+        access: 'public',
+        contentType: contentType!,
+        addRandomSuffix: false,
+        allowOverwrite: true,
+      }
+    );
 
-    // Create pool transaction
-    const poolTx = await createPoolTransaction({
+    const metadata = {
+      name: tokenName,
+      symbol: tokenSymbol,
+      description: description ?? '',
+      image: imageBlob.url,
+    };
+
+    const metadataBlob = await put(`coins/${mint}.json`, JSON.stringify(metadata), {
+      access: 'public',
+      contentType: 'application/json',
+      addRandomSuffix: false,
+      allowOverwrite: true,
+    });
+
+    await appendToIndex({
       mint,
-      tokenName,
-      tokenSymbol,
-      metadataUrl,
-      userWallet,
+      name: tokenName,
+      symbol: tokenSymbol,
+      image: imageBlob.url,
+      metadataUri: metadataBlob.url,
+      creator: userWallet,
+      createdAt: Date.now(),
     });
 
     res.status(200).json({
       success: true,
-      poolTx: poolTx
-        .serialize({
-          requireAllSignatures: false,
-          verifySignatures: false,
-        })
-        .toString('base64'),
+      imageUrl: imageBlob.url,
+      metadataUrl: metadataBlob.url,
     });
   } catch (error) {
     console.error('Upload error:', error);
@@ -104,100 +103,22 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 }
 
-async function uploadImage(tokenLogo: string, mint: string): Promise<string | false> {
-  const matches = tokenLogo.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
-  if (!matches || matches.length !== 3) {
-    return false;
-  }
-
-  const [, contentType, base64Data] = matches;
-
-  if (!contentType || !base64Data) {
-    return false;
-  }
-
-  const fileBuffer = Buffer.from(base64Data, 'base64');
-  const fileName = `images/${mint}.${contentType.split('/')[1]}`;
-
+async function appendToIndex(entry: CoinIndexEntry) {
+  let entries: CoinIndexEntry[] = [];
   try {
-    await uploadToR2(fileBuffer, contentType, fileName);
-    return `${PUBLIC_R2_URL}/${fileName}`;
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    return false;
+    const existing = await head(INDEX_PATH);
+    const data = await fetch(existing.url, { cache: 'no-store' });
+    if (data.ok) {
+      entries = (await data.json()) as CoinIndexEntry[];
+    }
+  } catch {
+    // first coin: index does not exist yet
   }
-}
-
-async function uploadMetadata(params: MetadataUploadParams): Promise<string | false> {
-  const metadata: Metadata = {
-    name: params.tokenName,
-    symbol: params.tokenSymbol,
-    image: params.image,
-  };
-  const fileName = `metadata/${params.mint}.json`;
-
-  try {
-    await uploadToR2(Buffer.from(JSON.stringify(metadata, null, 2)), 'application/json', fileName);
-    return `${PUBLIC_R2_URL}/${fileName}`;
-  } catch (error) {
-    console.error('Error uploading metadata:', error);
-    return false;
-  }
-}
-
-async function uploadToR2(
-  fileBuffer: Buffer,
-  contentType: string,
-  fileName: string
-): Promise<AWS.S3.PutObjectOutput> {
-  return new Promise((resolve, reject) => {
-    r2.putObject(
-      {
-        Bucket: R2_BUCKET,
-        Key: fileName,
-        Body: fileBuffer,
-        ContentType: contentType,
-      },
-      (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(data);
-        }
-      }
-    );
+  entries = [entry, ...entries.filter((e) => e.mint !== entry.mint)];
+  await put(INDEX_PATH, JSON.stringify(entries), {
+    access: 'public',
+    contentType: 'application/json',
+    addRandomSuffix: false,
+    allowOverwrite: true,
   });
-}
-
-async function createPoolTransaction({
-  mint,
-  tokenName,
-  tokenSymbol,
-  metadataUrl,
-  userWallet,
-}: {
-  mint: string;
-  tokenName: string;
-  tokenSymbol: string;
-  metadataUrl: string;
-  userWallet: string;
-}) {
-  const connection = new Connection(RPC_URL, 'confirmed');
-  const client = new DynamicBondingCurveClient(connection, 'confirmed');
-
-  const poolTx = await client.pool.createPool({
-    config: new PublicKey(POOL_CONFIG_KEY),
-    baseMint: new PublicKey(mint),
-    name: tokenName,
-    symbol: tokenSymbol,
-    uri: metadataUrl,
-    payer: new PublicKey(userWallet),
-    poolCreator: new PublicKey(userWallet),
-  });
-
-  const { blockhash } = await connection.getLatestBlockhash();
-  poolTx.feePayer = new PublicKey(userWallet);
-  poolTx.recentBlockhash = blockhash;
-
-  return poolTx;
 }

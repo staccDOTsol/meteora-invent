@@ -12,6 +12,7 @@ import dynamic from 'next/dynamic';
 import { useEffect } from 'react';
 
 const Terminal = dynamic(() => import('@/components/Terminal'), { ssr: false });
+const CurveSwap = dynamic(() => import('@/components/Swap/CurveSwap'), { ssr: false });
 
 const SwapWidget = () => {
   const tokenId = useTokenAddress();
@@ -20,7 +21,12 @@ const SwapWidget = () => {
     return null;
   }
 
-  return <Terminal mint={tokenId} />;
+  return (
+    <div className="flex flex-col gap-4">
+      <CurveSwap baseMint={tokenId} />
+      <Terminal mint={tokenId} />
+    </div>
+  );
 };
 
 export const TokenPageWithContext = () => {
